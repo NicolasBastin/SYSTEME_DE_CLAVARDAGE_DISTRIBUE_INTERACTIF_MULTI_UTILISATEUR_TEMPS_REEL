@@ -1,36 +1,39 @@
 import java.net.*;
 import java.io.IOException;
+import java.util.List;
 import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class DiscoveryService {
-    private static final int DISCOVERY_PORT = 8888;
+    private static final int DISCOVERY_PORT = 8298;
     private DatagramSocket socket;
 
     private String myId;
     private String myNickname;
+    private List<String> listName = new CopyOnWriteArrayList<>();
 
-    // Constructeur qui prend le pseudo choisi par l'utilisateur
+    public List<String> getListName() {
+        return listName;
+    }
+
     public DiscoveryService(String nickname) {
         this.myNickname = nickname;
-        // Génération d'un ID unique basé sur l'heure de lancement
         this.myId = "ID_" + System.currentTimeMillis();
     }
 
     public void startService() {
         try {
-            // Création du socket avec l'option SO_REUSEADDR pour tester en local
             socket = new DatagramSocket(null);
             socket.setReuseAddress(true);
             socket.bind(new InetSocketAddress(DISCOVERY_PORT));
             socket.setBroadcast(true);
 
-            // 1. Démarrer l'écouteur dans un Thread séparé
             Thread listenerThread = new Thread(this::listenForMessages);
             listenerThread.start();
 
             System.out.println("Service de découverte démarré. Écoute sur le port " + DISCOVERY_PORT);
 
-            // 2. Annoncer sa présence à tout le réseau local
             broadcastPresence();
 
         } catch (SocketException e) {
@@ -44,35 +47,34 @@ public class DiscoveryService {
         while (!socket.isClosed()) {
             try {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                socket.receive(packet); // Point bloquant en attente d'un message
+                socket.receive(packet);
 
                 String message = new String(packet.getData(), 0, packet.getLength()).trim();
                 InetAddress senderAddress = packet.getAddress();
 
                 String[] parts = message.split("\\|");
 
-                // Sécurité basique pour éviter un plantage si un message malformé arrive
                 if (parts.length < 3) continue;
 
                 String command = parts[0];
                 String senderId = parts[1];
                 String senderNickname = parts[2];
 
-                // Si le message vient de moi-même (on compare les ID), je l'ignore
                 if (senderId.equals(this.myId)) {
                     continue;
                 }
 
                 if (command.equals("DISCOVER")) {
                     System.out.println("Nouveau venu détecté : " + senderNickname + " (" + senderAddress.getHostAddress() + ")");
-                    // TODO: Ajouter à la liste de contacts ici
+                    listName.add(senderNickname);
 
-                    // Lui répondre directement pour lui dire "Je suis là aussi"
                     sendDirectReply(senderAddress, packet.getPort());
                 }
                 else if (command.equals("REPLY")) {
                     System.out.println("Réponse reçue d'un utilisateur déjà présent : " + senderNickname);
-                    // TODO: Ajouter à la liste de contacts ici
+                    if (!listName.contains(senderNickname)) {
+                        listName.add(senderNickname);
+                    }
                 }
 
             } catch (IOException e) {
@@ -88,7 +90,6 @@ public class DiscoveryService {
             String message = "DISCOVER|" + myId + "|" + myNickname;
             byte[] data = message.getBytes();
 
-            // L'adresse 255.255.255.255 est l'adresse de broadcast générique
             InetAddress broadcastAddress = InetAddress.getByName("255.255.255.255");
             DatagramPacket packet = new DatagramPacket(data, data.length, broadcastAddress, DISCOVERY_PORT);
 
@@ -105,7 +106,6 @@ public class DiscoveryService {
             String message = "REPLY|" + myId + "|" + myNickname;
             byte[] data = message.getBytes();
 
-            // Envoi uniquement à l'IP de la personne qui a fait le DISCOVER
             DatagramPacket packet = new DatagramPacket(data, data.length, targetAddress, targetPort);
             socket.send(packet);
 
@@ -118,7 +118,6 @@ public class DiscoveryService {
         Scanner scanner = new Scanner(System.in);
         String pseudo = "";
 
-        // Boucle pour s'assurer que l'utilisateur rentre un pseudo non vide
         while (pseudo.trim().isEmpty()) {
             System.out.print("Veuillez entrer votre pseudonyme : ");
             pseudo = scanner.nextLine();
@@ -126,14 +125,17 @@ public class DiscoveryService {
 
         System.out.println("Bonjour " + pseudo + " ! Connexion au réseau local...");
 
-        // On instancie le service avec le pseudo saisi
         DiscoveryService service = new DiscoveryService(pseudo);
         service.startService();
 
-        // Garder le programme en vie dans le thread principal
         while(true) {
             try {
-                Thread.sleep(1000);
+                Runtime runtime = Runtime.getRuntime();
+                long usedMemory = runtime.totalMemory() - runtime.freeMemory();
+                long usedMemoryMB = usedMemory / (1024 * 1024);
+
+                System.out.println("Contacts : " + service.getListName() + " | RAM : " + usedMemoryMB + " Mo");
+                Thread.sleep(3000);
             } catch (InterruptedException e) {
                 break;
             }
