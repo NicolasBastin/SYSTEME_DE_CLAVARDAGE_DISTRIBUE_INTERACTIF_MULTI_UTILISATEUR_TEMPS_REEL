@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/DiscoveryService/DiscoveryService.iml" filepath="$PROJECT_DIR$/DiscoveryService/DiscoveryService.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/SYSTEME_DE_CLAVARDAGE_DISTRIBUE_INTERACTIF_MULTI_UTILISATEUR_TEMPS_REEL.iml" filepath="$PROJECT_DIR$/.idea/SYSTEME_DE_CLAVARDAGE_DISTRIBUE_INTERACTIF_MULTI_UTILISATEUR_TEMPS_REEL.iml" />
+    </modules>
+  </component>
+</project>
