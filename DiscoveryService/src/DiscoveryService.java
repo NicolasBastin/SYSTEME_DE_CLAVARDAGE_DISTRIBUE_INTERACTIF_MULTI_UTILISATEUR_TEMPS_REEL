@@ -5,6 +5,24 @@ import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * Service de base / découverte P2P (Peer-to-Peer) sur réseau local via UDP.
+ * Permet à tous les utilisateurs de l'app de se détecter mutuellement
+ * de manière décentralisée (sans serveur) sur le port 8298.
+ *
+ * Mécanismes implémentés :
+ * - Protocole de base : Envoi d'un DISCOVER (broadcast) à la connexion, 
+ *   auquel les autres app répondent par un REPLY (unicast).
+ * - Contre Collision : Délai aléatoire (50-300 ms) avant de répondre à un 
+ *   DISCOVER pour éviter les collisions de paquets sur le réseau.
+ * - Detection de déconnexion sauvage : Envoi de signaux ALIVE toutes les 10 secondes. 
+ *   Tout contact inactif depuis plus de 30 secondes est supprimé de la liste.
+ * - Déconnexion propre : Un Hook de fermeture envoie un 
+ *   message GOODBYE pour que les pairs mettent à jour leurs listes instantanément.
+ * - Anti-doublon : Si un pair détecte une tentative de connexion avec son propre 
+ *   pseudonyme, il renvoie un DENIED forçant le nouvel arrivant à changer de nom.
+ */
+
 public class DiscoveryService {
     private static final int DISCOVERY_PORT = 8298;
     private DatagramSocket socket;
