@@ -58,29 +58,28 @@ public class DiscoveryService {
             System.out.println("Service de découverte démarré. Écoute sur le port " + DISCOVERY_PORT);
 
             broadcastPresence();
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try (DatagramSocket tempSocket = new DatagramSocket()) {
+                tempSocket.setBroadcast(true);
+                
+                String message = "GOODBYE|" + myId + "|" + myNickname;
+                byte[] data = message.getBytes();
+                
+                InetAddress broadcastAddress = InetAddress.getByName("255.255.255.255");
+                DatagramPacket packet = new DatagramPacket(data, data.length, broadcastAddress, DISCOVERY_PORT);
+                
+                tempSocket.send(packet);
+                System.out.println("Signal de déconnexion envoyé aux autres utilisateurs.");
+                
+                } catch (IOException e) {
+                    System.err.println("Erreur lors de l'envoi du message de déconnexion : " + e.getMessage());
+                }
+        }));
 
         } catch (SocketException e) {
             System.err.println("Erreur lors de l'ouverture du socket UDP : " + e.getMessage());
         }
     }
-
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-    try (DatagramSocket tempSocket = new DatagramSocket()) {
-        tempSocket.setBroadcast(true);
-        
-        String message = "GOODBYE|" + myId + "|" + myNickname;
-        byte[] data = message.getBytes();
-        
-        InetAddress broadcastAddress = InetAddress.getByName("255.255.255.255");
-        DatagramPacket packet = new DatagramPacket(data, data.length, broadcastAddress, DISCOVERY_PORT);
-        
-        tempSocket.send(packet);
-        System.out.println("Signal de déconnexion envoyé aux autres utilisateurs.");
-        
-    } catch (IOException e) {
-        System.err.println("Erreur lors de l'envoi du message de déconnexion : " + e.getMessage());
-    }
-}));
 
     private void listenForMessages() {
         byte[] buffer = new byte[1024];
