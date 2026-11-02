@@ -13,15 +13,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Mécanismes implémentés :
  * - Protocole de base : Envoi d'un DISCOVER (broadcast) à la connexion, 
  *   auquel les autres app répondent par un REPLY (unicast).
- * 
- * 
+ * - Anti-doublon : Si un pair détecte une tentative de connexion avec son propre 
+ *   pseudonyme, il renvoie un DENIED forçant le nouvel arrivant à changer de nom. 
+ 
  *  Ce qui pourrait être bien a implémenté :
  * - Detection de déconnexion sauvage : Envoi de signaux ALIVE toutes les 10 secondes.
  *   Tout contact inactif depuis plus de 30 secondes est supprimé de la liste.
  * - Déconnexion propre : Un Hook de fermeture envoie un 
  *   message GOODBYE pour que les pairs mettent à jour leurs listes instantanément.
- * - Anti-doublon : Si un pair détecte une tentative de connexion avec son propre 
- *   pseudonyme, il renvoie un DENIED forçant le nouvel arrivant à changer de nom.
  */
 
 public class DiscoveryService {
@@ -65,6 +64,24 @@ public class DiscoveryService {
         }
     }
 
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+    try (DatagramSocket tempSocket = new DatagramSocket()) {
+        tempSocket.setBroadcast(true);
+        
+        String message = "GOODBYE|" + myId + "|" + myNickname;
+        byte[] data = message.getBytes();
+        
+        InetAddress broadcastAddress = InetAddress.getByName("255.255.255.255");
+        DatagramPacket packet = new DatagramPacket(data, data.length, broadcastAddress, DISCOVERY_PORT);
+        
+        tempSocket.send(packet);
+        System.out.println("Signal de déconnexion envoyé aux autres utilisateurs.");
+        
+    } catch (IOException e) {
+        System.err.println("Erreur lors de l'envoi du message de déconnexion : " + e.getMessage());
+    }
+}));
+
     private void listenForMessages() {
         byte[] buffer = new byte[1024];
 
@@ -104,7 +121,13 @@ public class DiscoveryService {
                     listName.clear();
                     this.nameConflict = true;
                     socket.close();
-}
+                    }
+
+                else if (command.equals("GOODBYE")) {
+                    System.out.println("Un utilisateur s'est déconnecté : " + senderNickname);
+                    listName.remove(senderNickname);
+                }
+
                 else if (command.equals("REPLY")) {
                     System.out.println("Réponse reçue d'un utilisateur déjà présent : " + senderNickname);
                     if (!listName.contains(senderNickname)) {
@@ -169,7 +192,7 @@ public class DiscoveryService {
             String pseudo = "";
 
             while (pseudo.trim().isEmpty()) {
-                System.out.print("Veuillez entrer votre pseudonyme : ");
+                System.out.print("Veuillez entrer votre pseudo : ");
                 pseudo = scanner.nextLine();
             }
 
