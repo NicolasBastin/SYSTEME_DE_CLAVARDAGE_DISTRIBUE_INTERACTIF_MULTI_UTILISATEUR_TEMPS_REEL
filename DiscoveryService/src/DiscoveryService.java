@@ -89,7 +89,7 @@ public class DiscoveryService {
                 }
 
                 if (command.equals("DISCOVER")) {
-                    if (senderNickname.equals(this.myNickname)) {
+                    if (senderNickname.equals(this.myNickname) || listName.contains(senderNickname)) {
                         System.out.println("Un utilisateur tente de se connecter avec le même pseudonyme : " + senderNickname);
                         sendDenied(senderAddress, packet.getPort());
                     }
