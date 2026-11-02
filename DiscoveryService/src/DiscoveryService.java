@@ -13,9 +13,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Mécanismes implémentés :
  * - Protocole de base : Envoi d'un DISCOVER (broadcast) à la connexion, 
  *   auquel les autres app répondent par un REPLY (unicast).
- * - Contre Collision : Délai aléatoire (50-300 ms) avant de répondre à un 
- *   DISCOVER pour éviter les collisions de paquets sur le réseau.
- * - Detection de déconnexion sauvage : Envoi de signaux ALIVE toutes les 10 secondes. 
+ * 
+ * 
+ *  Ce qui pourrait être bien a implémenté :
+ * - Detection de déconnexion sauvage : Envoi de signaux ALIVE toutes les 10 secondes.
  *   Tout contact inactif depuis plus de 30 secondes est supprimé de la liste.
  * - Déconnexion propre : Un Hook de fermeture envoie un 
  *   message GOODBYE pour que les pairs mettent à jour leurs listes instantanément.
@@ -30,6 +31,11 @@ public class DiscoveryService {
     private String myId;
     private String myNickname;
     private List<String> listName = new CopyOnWriteArrayList<>();
+    private volatile boolean nameConflict = false; 
+    
+    public boolean hasNameConflict() {
+        return nameConflict;
+    }
 
     public List<String> getListName() {
         return listName;
@@ -83,11 +89,22 @@ public class DiscoveryService {
                 }
 
                 if (command.equals("DISCOVER")) {
-                    System.out.println("Nouveau venu détecté : " + senderNickname + " (" + senderAddress.getHostAddress() + ")");
-                    listName.add(senderNickname);
-
-                    sendDirectReply(senderAddress, packet.getPort());
+                    if (senderNickname.equals(this.myNickname)) {
+                        System.out.println("Un utilisateur tente de se connecter avec le même pseudonyme : " + senderNickname);
+                        sendDenied(senderAddress, packet.getPort());
+                    }
+                    else{
+                        System.out.println("Nouveau venu détecté : " + senderNickname + " (" + senderAddress.getHostAddress() + ")");
+                        listName.add(senderNickname);
+                        sendDirectReply(senderAddress, packet.getPort());
+                    }
                 }
+                else if (command.equals("DENIED")) {
+                    System.out.println("\n[!] AVERTISSEMENT : Le pseudonyme '" + senderNickname + "' est déjà utilisé sur le réseau.");
+                    listName.clear();
+                    this.nameConflict = true;
+                    socket.close();
+}
                 else if (command.equals("REPLY")) {
                     System.out.println("Réponse reçue d'un utilisateur déjà présent : " + senderNickname);
                     if (!listName.contains(senderNickname)) {
@@ -132,31 +149,48 @@ public class DiscoveryService {
         }
     }
 
+    private void sendDenied(InetAddress targetAddress, int targetPort) {
+        try {
+            String message = "DENIED|" + myId + "|" + myNickname;
+            byte[] data = message.getBytes();
+
+            DatagramPacket packet = new DatagramPacket(data, data.length, targetAddress, targetPort);
+            socket.send(packet);
+
+        } catch (IOException e) {
+            System.err.println("Erreur lors de la réponse : " + e.getMessage());
+        }
+    }
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        String pseudo = "";
+    
+        while (true) {
+            String pseudo = "";
 
-        while (pseudo.trim().isEmpty()) {
-            System.out.print("Veuillez entrer votre pseudonyme : ");
-            pseudo = scanner.nextLine();
-        }
-
-        System.out.println("Bonjour " + pseudo + " ! Connexion au réseau local...");
-
-        DiscoveryService service = new DiscoveryService(pseudo);
-        service.startService();
-
-        while(true) {
-            try {
-                Runtime runtime = Runtime.getRuntime();
-                long usedMemory = runtime.totalMemory() - runtime.freeMemory();
-                long usedMemoryMB = usedMemory / (1024 * 1024);
-
-                System.out.println("Contacts : " + service.getListName() + " | RAM : " + usedMemoryMB + " Mo");
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                break;
+            while (pseudo.trim().isEmpty()) {
+                System.out.print("Veuillez entrer votre pseudonyme : ");
+                pseudo = scanner.nextLine();
             }
+
+            System.out.println("Bonjour " + pseudo + " ! Connexion au réseau local...");
+
+            DiscoveryService service = new DiscoveryService(pseudo);
+            service.startService();
+
+            while (!service.hasNameConflict()) {
+                try {
+                    Runtime runtime = Runtime.getRuntime();
+                    long usedMemoryMB = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
+
+                    System.out.println("Contacts : " + service.getListName() + " | RAM : " + usedMemoryMB + " Mo");
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+            
+            System.out.println("=> Reconnexion nécessaire avec un nouveau nom.\n");
         }
     }
 }
