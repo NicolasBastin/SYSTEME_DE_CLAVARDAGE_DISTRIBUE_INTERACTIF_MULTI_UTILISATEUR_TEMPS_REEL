@@ -13,6 +13,8 @@ import java.net.InetAddress;
 import DiscoveryService.java;
 
 /**
+ *                          A MODIFIER
+ * 
  * Service de base / découverte P2P (Peer-to-Peer) sur réseau local via UDP.
  * Permet à tous les utilisateurs de l'app de se détecter mutuellement
  * de manière décentralisée (sans serveur) sur le port 8298.
