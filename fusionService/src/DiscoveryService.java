@@ -183,9 +183,6 @@ public class DiscoveryService {
 
             System.out.println("Bonjour " + pseudo + " ! Connexion au réseau local...");
 
-            // Lancement du service de base de données
-            ConnectionService dbService = new ConnectionService(pseudo);
-
             // Lancement du service de découverte
             DiscoveryService service = new DiscoveryService(pseudo);
             service.startService();
