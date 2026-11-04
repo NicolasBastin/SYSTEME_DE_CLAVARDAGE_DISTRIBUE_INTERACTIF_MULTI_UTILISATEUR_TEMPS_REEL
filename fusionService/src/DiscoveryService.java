@@ -202,10 +202,6 @@ public class DiscoveryService {
                 continue; // Recommence la boucle while(true) pour demander un autre pseudo
             }
 
-            //Le pseudo est validé sur le réseau si on arrive là
-            ConnectionService dbService = new ConnectionService(pseudo);
-            dbService.initialiserBaseDeDonnees();
-
             while (!service.hasNameConflict()) {
                 try {
                     Runtime runtime = Runtime.getRuntime();
