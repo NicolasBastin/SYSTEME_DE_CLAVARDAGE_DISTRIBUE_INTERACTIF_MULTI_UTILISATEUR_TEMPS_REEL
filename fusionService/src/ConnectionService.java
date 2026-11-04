@@ -15,10 +15,9 @@ public class ConnectionService {
 
     public ConnectionService(String pseudo) {
         this.pseudo = pseudo;
-        initialiserBaseDeDonnees();
     }
 
-    private void initialiserBaseDeDonnees() {
+    public void initialiserBaseDeDonnees() {
         if (fichierBDD.exists()) {
             System.out.println("La base de données existe déjà pour : " + pseudo);
         } else {

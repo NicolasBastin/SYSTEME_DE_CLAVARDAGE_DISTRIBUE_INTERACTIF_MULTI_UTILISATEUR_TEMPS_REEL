@@ -190,6 +190,22 @@ public class DiscoveryService {
             DiscoveryService service = new DiscoveryService(pseudo);
             service.startService();
 
+            try {
+                // Attente d'1 seconde pour laisser la possibilité aux DENIED d'arriver
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
+            // Vérification post-attente
+            if (service.hasNameConflict()) {
+                continue; // Recommence la boucle while(true) pour demander un autre pseudo
+            }
+
+            //Le pseudo est validé sur le réseau si on arrive là
+            ConnectionService dbService = new ConnectionService(pseudo);
+            dbService.initialiserBaseDeDonnees();
+
             while (!service.hasNameConflict()) {
                 try {
                     Runtime runtime = Runtime.getRuntime();
