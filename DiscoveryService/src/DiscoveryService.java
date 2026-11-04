@@ -15,12 +15,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *   auquel les autres app répondent par un REPLY (unicast).
  * - Anti-doublon : Si un pair détecte une tentative de connexion avec son propre 
  *   pseudonyme, il renvoie un DENIED forçant le nouvel arrivant à changer de nom. 
- 
+ * - Déconnexion propre : Un Hook de fermeture envoie un 
+ *   message GOODBYE pour que les pairs mettent à jour leurs listes instantanément.
+
  *  Ce qui pourrait être bien a implémenté :
  * - Detection de déconnexion sauvage : Envoi de signaux ALIVE toutes les 10 secondes.
  *   Tout contact inactif depuis plus de 30 secondes est supprimé de la liste.
- * - Déconnexion propre : Un Hook de fermeture envoie un 
- *   message GOODBYE pour que les pairs mettent à jour leurs listes instantanément.
  */
 
 public class DiscoveryService {

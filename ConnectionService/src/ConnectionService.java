@@ -47,8 +47,6 @@ public class ConnectionService {
     // Connexion au compte si la database message existe
     if (fichierBDD.exists()) {
         System.out.println("La base de données existe déjà");
-
-
     }
 
     // Connexion au compte si la database message n'existe pas
