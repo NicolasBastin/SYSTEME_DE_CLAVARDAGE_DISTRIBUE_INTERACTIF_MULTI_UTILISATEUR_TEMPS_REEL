@@ -4,6 +4,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+
+//### DEMANDER AU PROF SI ON PEUT DEMANDER AUX UTILISATEURS D'INSTALLER DES DRIVERS SQLITE###
+
 public class ConnectionService {
 
     // on cree un pointeur vers une base de données
