@@ -202,6 +202,9 @@ public class DiscoveryService {
                 continue; // Recommence la boucle while(true) pour demander un autre pseudo
             }
 
+            ConnectionService dbService = new ConnectionService(pseudo);
+            dbService.initialiserBaseDeDonnees();
+
             while (!service.hasNameConflict()) {
                 try {
                     Runtime runtime = Runtime.getRuntime();
