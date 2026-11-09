@@ -44,5 +44,8 @@ public class ConnectionService {
     // À ajouter dans ConnectionService.java
     public void sauvegarderMessage(String expediteur, String texte) {
         String sql = "INSERT INTO historique (horodatage, messages, adresseIPdestinataire) VALUES (datetime('now', 'localtime'), ?, ?)";
+        catch (SQLException e) {
+            System.out.println("Erreur de sauvegarde : " + e.getMessage());
+        }
     }
 }
