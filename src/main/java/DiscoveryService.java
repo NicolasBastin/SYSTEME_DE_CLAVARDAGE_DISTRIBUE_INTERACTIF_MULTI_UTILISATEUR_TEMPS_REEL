@@ -249,6 +249,14 @@ public class DiscoveryService {
                 if (input.equalsIgnoreCase("/quit")) {
                     System.exit(0);
                 } 
+
+                else if (input.equalsIgnoreCase("/historique")) {
+                    System.out.println("\n--- HISTORIQUE DES MESSAGES ---");
+                    String historique = dbService.afficherMessages(); 
+                    System.out.println(historique);
+                    System.out.println("-------------------------------\n");
+                }
+
                 else if (input.startsWith("/msg ")) {
                     // Découpe la commande en 3 : ["/msg", "Destinataire", "Le reste du message"]
                     String[] parts = input.split(" ", 3);
