@@ -41,8 +41,46 @@ public class ConnectionService {
         }
     }
 
-    // À ajouter dans ConnectionService.java
-    public void sauvegarderMessage(String expediteur, String texte) {
-        String sql = "INSERT INTO historique (horodatage, messages, adresseIPdestinataire) VALUES (datetime('now', 'localtime'), ?, ?)";
+    public void sauvegarderMessages(String expediteur, String texte) {
+        String sql = "INSERT INTO historique (horodatage, messages, adresseDestinataire) VALUES (datetime('now', 'localtime'), ?, ?)";
+
+        // Ouverture de la connexion et préparation de la requête
+        try (Connection conn = DriverManager.getConnection(url);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            // Remplacement des '?' par nos variables
+            pstmt.setString(1, texte);
+            pstmt.setString(2, expediteur);
+
+            // Exécution et mise à jour
+            pstmt.executeUpdate();
+            System.out.println("Message sauvegardé avec succès dans l'historique.");
+
+        } catch (SQLException e) {
+            System.out.println("Erreur lors de la sauvegarde du message");
+        }
     }
+
+    //A TESTER
+    String afficherMessages(String expediteur) {
+        String allMessages = "";
+        String sql = "SELECT messages FROM historique (horodatage, messages, adresseDestinataire)";
+
+        // Ouverture de la connexion et préparation de la requête
+        try (Connection conn = DriverManager.getConnection(url);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            // Parcours des résultats
+            while (rs.next()) {
+                allMessages = rs.getString("messages");
+            }
+        }
+        catch (SQLException e) {
+            System.out.println("Erreur lors de la lecture des messages");
+        }
+
+        return allMessages;
+    }
+
 }
