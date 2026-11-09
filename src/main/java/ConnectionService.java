@@ -1,5 +1,8 @@
 import java.io.File;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 public class ConnectionService {
 
@@ -59,7 +62,7 @@ public class ConnectionService {
     }
 
     //A TESTER
-    String afficherMessages(String expediteur) {
+    String afficherMessages() {
         String allMessages = "";
         String sql = "SELECT messages FROM historique (horodatage, messages, adresseDestinataire)";
 

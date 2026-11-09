@@ -257,17 +257,24 @@ public class DiscoveryService {
                     System.out.println("-------------------------------\n");
                 }
 
+                else if (input.equalsIgnoreCase("/Contacts")) {
+                    System.out.println("\n--- CONTACTS EN LIGNE ---");
+                    System.out.println("Contacts : " + service.getContactNames());
+                    System.out.println("-------------------------------\n");
+                }
+
                 else if (input.startsWith("/msg ")) {
-                    // Découpe la commande en 3 : ["/msg", "Destinataire", "Le reste du message"]
                     String[] parts = input.split(" ", 3);
                     if (parts.length == 3) {
                         String destinataire = parts[1];
                         String texteMessage = parts[2];
                         service.envoyerMessagePrive(destinataire, texteMessage);
+                        dbService.sauvegarderMessages(destinataire, texteMessage); 
+                        
                     } else {
                         System.out.println("Format incorrect. Utilisez : /msg <pseudo> <message>");
                     }
-                } 
+                }
                 else if (!input.trim().isEmpty()) {
                     System.out.println("Commande inconnue. Contacts en ligne : " + service.getContactNames());
                 }
