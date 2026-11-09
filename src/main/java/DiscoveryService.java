@@ -79,13 +79,13 @@ public class DiscoveryService {
             try {
                 tcpServerSocket = new ServerSocket(TCP_PORT);
                 while (!tcpServerSocket.isClosed()) {
-                    // Attend qu'un pair se connecte pour envoyer un message
+                    // Attend qu'une autre personne se connecte
                     Socket clientSocket = tcpServerSocket.accept();
-                    
                     // Lit le message entrant
                     try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
-                        String messageEntrant = in.readLine();
-                        if (messageEntrant != null) {
+                        String messageEntrant;
+                        // On lit toutes les lignes envoyées jusqu'à la fin du flux
+                        while ((messageEntrant = in.readLine()) != null) {
                             System.out.println(messageEntrant);
                         }
                     }
@@ -110,13 +110,13 @@ public class DiscoveryService {
         }
 
         try (Socket socket = new Socket(ipDestinataire, TCP_PORT);
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
             
-            // Envoi du texte formaté à travers la connexion TCP
-            out.println("\n[" + this.myNickname + "] (privé) : " + texte);
+            out.println("[" + this.myNickname + "] (privé) : " + texte);
+            out.flush();
             System.out.println("-> Message envoyé à " + destinataire);
-            
-        } catch (IOException e) {
+    } 
+        catch (IOException e) {
             System.err.println("[Erreur] Impossible de joindre " + destinataire + " : " + e.getMessage());
         }
     }
