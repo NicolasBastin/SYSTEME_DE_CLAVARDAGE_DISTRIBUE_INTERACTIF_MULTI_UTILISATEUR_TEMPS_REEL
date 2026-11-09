@@ -223,18 +223,17 @@ public class DiscoveryService {
             ConnectionService dbService = new ConnectionService(pseudo);
             dbService.initialiserBaseDeDonnees();
 
-            // Dans le main(), remplacez la boucle de RAM ("while (!service.hasNameConflict()) {...}") par ceci :
             System.out.println("Vous pouvez maintenant taper vos messages ! (Tapez /quit pour quitter)");
 
             while (!service.hasNameConflict()) {
-                String texte = scanner.nextLine(); // Le programme se met en pause ici et attend que vous tapiez "Entrée"
+                String texte = scanner.nextLine(); // Le programme se met en pause ici et attend que l'on tape "Entrée"
                 
                 if (texte.equalsIgnoreCase("/quit")) {
                     System.exit(0); // Va déclencher le ShutdownHook automatiquement
                 }
                 
                 if (!texte.trim().isEmpty()) {
-                    service.envoyerMessage(texte);
+                    service.sendMessage(texte);
                     dbService.sauvegarderMessage(pseudo, texte); // On sauvegarde notre propre message
                 }
             }
