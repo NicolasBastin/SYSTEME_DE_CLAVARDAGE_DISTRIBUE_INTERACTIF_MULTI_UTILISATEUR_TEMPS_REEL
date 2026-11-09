@@ -88,7 +88,7 @@ public class DiscoveryService {
 
                 String message = new String(packet.getData(), 0, packet.getLength()).trim();
                 InetAddress senderAddress = packet.getAddress();
-                String[] parts = message.split("\\|");
+                String[] parts = message.split("\\|", 4); 
 
                 if (parts.length < 3) continue;
 
@@ -116,6 +116,13 @@ public class DiscoveryService {
                     this.nameConflict = true;
                     socket.close();
                 }
+
+                else if (command.equals("MESSAGE") && parts.length == 4) {
+                    String contenu = parts[3];
+                    System.out.println("\n[" + senderNickname + "] : " + contenu);
+                    // TODO: Ici, il faudra appeler le service de sav en base de donnée (dbService.sauvegarderMessage(...)) plus tard
+                }
+
                 else if (command.equals("GOODBYE")) {
                     System.out.println("Un utilisateur s'est déconnecté : " + senderNickname);
                     listName.remove(senderNickname);
@@ -156,6 +163,20 @@ public class DiscoveryService {
             socket.send(packet);
         } catch (IOException e) {
             System.err.println("Erreur lors de la réponse : " + e.getMessage());
+        }
+    }
+
+    // À ajouter dans DiscoveryService.java
+    public void sendMessage(String texte) {
+        try {
+            // Le protocole devient : MESSAGE|monId|monPseudo|Le texte de mon message
+            String message = "MESSAGE|" + myId + "|" + myNickname + "|" + texte;
+            byte[] data = message.getBytes();
+            InetAddress broadcastAddress = InetAddress.getByName("255.255.255.255");
+            DatagramPacket packet = new DatagramPacket(data, data.length, broadcastAddress, DISCOVERY_PORT);
+            socket.send(packet);
+        } catch (IOException e) {
+            System.err.println("Erreur d'envoi du message : " + e.getMessage());
         }
     }
 
@@ -202,18 +223,21 @@ public class DiscoveryService {
             ConnectionService dbService = new ConnectionService(pseudo);
             dbService.initialiserBaseDeDonnees();
 
-            while (!service.hasNameConflict()) {
-                try {
-                    Runtime runtime = Runtime.getRuntime();
-                    long usedMemoryMB = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
+            // Dans le main(), remplacez la boucle de RAM ("while (!service.hasNameConflict()) {...}") par ceci :
+            System.out.println("Vous pouvez maintenant taper vos messages ! (Tapez /quit pour quitter)");
 
-                    System.out.println("Contacts : " + service.getListName() + " | RAM : " + usedMemoryMB + " Mo");
-                    Thread.sleep(3000);
-                } catch (InterruptedException e) {
-                    break;
+            while (!service.hasNameConflict()) {
+                String texte = scanner.nextLine(); // Le programme se met en pause ici et attend que vous tapiez "Entrée"
+                
+                if (texte.equalsIgnoreCase("/quit")) {
+                    System.exit(0); // Va déclencher le ShutdownHook automatiquement
+                }
+                
+                if (!texte.trim().isEmpty()) {
+                    service.envoyerMessage(texte);
+                    dbService.sauvegarderMessage(pseudo, texte); // On sauvegarde notre propre message
                 }
             }
-            
             System.out.println("=> Reconnexion nécessaire avec un nouveau nom.\n");
         }
     }

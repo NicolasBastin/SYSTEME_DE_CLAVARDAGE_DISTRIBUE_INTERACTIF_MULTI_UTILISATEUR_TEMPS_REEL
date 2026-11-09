@@ -4,9 +4,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-
-//### DEMANDER AU PROF SI ON PEUT DEMANDER AUX UTILISATEURS D'INSTALLER DES DRIVERS SQLITE###
-
 public class ConnectionService {
 
     // on cree un pointeur vers une base de données
@@ -41,6 +38,14 @@ public class ConnectionService {
         }
         catch (SQLException e) {
             System.out.println("Erreur lors de l'initialisation : " + e.getMessage());
+        }
+    }
+
+    // À ajouter dans ConnectionService.java
+    public void sauvegarderMessage(String expediteur, String texte) {
+        String sql = "INSERT INTO historique (horodatage, messages, adresseIPdestinataire) VALUES (datetime('now', 'localtime'), ?, ?)";
+        catch (SQLException e) {
+            System.out.println("Erreur de sauvegarde : " + e.getMessage());
         }
     }
 }
